@@ -1,0 +1,4 @@
+-- Applied via Supabase MCP as migrations phase2_survival + phase2_collect_atomic.
+-- Tables: player_state, inventory, rockets, orders, crates (RLS on; no anon policies except public rockets read).
+-- Functions: book_order(user,item,qty,units,cost,slots) and collect_rocket(user,rocket,now,base,per_unit,life_h) — service-role only.
+-- See Supabase dashboard > Database > Migrations for the exact SQL.

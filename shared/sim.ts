@@ -15,7 +15,7 @@ export function bfs(sx: number, sy: number, tx: number, ty: number) {
 }
 export function step(p: Body, t: Ctl, dt: number) {
   let vx = t.vx, vy = t.vy;
-  if (!vx && !vy && t.path.length) { const w = t.path[0]; const dx = w.x - p.x, dy = w.y - p.y; const d = Math.hypot(dx, dy); if (d < 0.08) t.path.shift(); else { vx = dx / d; vy = dy / d; } }
+  if (!vx && !vy && t.path.length) { const w = t.path[0]; const dx = w.x - p.x, dy = w.y - p.y; const d = Math.hypot(dx, dy); if (d < 0.08) t.path.shift(); else { const k = Math.min(1, d / (SPEED * dt)); vx = dx / d * k; vy = dy / d * k; } }
   const len = Math.hypot(vx, vy); if (!len) { p.moving = false; return; }
   const s = SPEED * dt / Math.max(1, len); const nx = p.x + vx * s, ny = p.y + vy * s; const R = 0.25;
   const free = (x: number, y: number) => !blocked(x - R, y - R) && !blocked(x + R, y - R) && !blocked(x - R, y + R) && !blocked(x + R, y + R);
