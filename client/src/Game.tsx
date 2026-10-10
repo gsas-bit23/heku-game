@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from "react"; import Phaser from "phaser"; import { Client, type Room } from "colyseus.js";
-import { ColonyScene, bus } from "./scene"; import { WS, type Character } from "./api"; import type { Building } from "../../shared/map";
+import { useEffect, useRef, useState } from "react"; import Phaser from "phaser"; import { Net } from "./net";
+import { ColonyScene, bus } from "./scene"; import { type Character } from "./api"; import type { Building } from "../../shared/map";
 type Msg = { name: string; text: string; sys?: boolean };
 export default function Game({ token, me, onLogout }: { token: string; me: Character; onLogout: () => void }) {
-  const host = useRef<HTMLDivElement>(null); const roomRef = useRef<Room>(); const [log, setLog] = useState<Msg[]>([]); const [near, setNear] = useState<Building | null>(null);
+  const host = useRef<HTMLDivElement>(null); const roomRef = useRef<Net>(); const [log, setLog] = useState<Msg[]>([]); const [near, setNear] = useState<Building | null>(null);
   const [panel, setPanel] = useState<Building | null>(null); const [text, setText] = useState(""); const [count, setCount] = useState(0); const [err, setErr] = useState(""); const [o2, setO2] = useState(100);
   useEffect(() => { let game: Phaser.Game | undefined; let dead = false;
-    new Client(WS).joinOrCreate("colony", { token }).then(room => { if (dead) { room.leave(); return; } roomRef.current = room; (window as unknown as { __room: Room }).__room = room;
+    const net = new Net(me); net.connect().then(() => { const room = net; if (dead) { room.leave(); return; } roomRef.current = room; (window as unknown as { __room: Net }).__room = room; setCount(room.state.players.size);
       game = new Phaser.Game({ type: Phaser.AUTO, parent: host.current!, backgroundColor: "#07050a", scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight }, scene: [] });
-      game.scene.add("colony", ColonyScene, true, { room }); room.onLeave(code => { if (code === 4000) setErr("Signed in elsewhere — disconnected."); else if (code > 1000) setErr("Connection lost (" + code + ")."); }); })
-      .catch(e => setErr("Could not join colony: " + (e.message || e)));
+      game.scene.add("colony", ColonyScene, true, { room }); })
+      .catch(e => { net.leave(); setErr("Could not join colony: " + (e.message || e)); });
     const on = (t: string, f: (d: never) => void) => { const h = (e: Event) => f((e as CustomEvent).detail as never); bus.addEventListener(t, h); return () => bus.removeEventListener(t, h); };
     const offs = [on("chat", (m: Msg) => setLog(l => [...l.slice(-30), m])), on("near", (b: Building | null) => setNear(b)), on("interact", (b: Building) => setPanel(b)),
       on("roster", () => setCount(roomRef.current?.state.players.size ?? 0))];
     const o = setInterval(() => setO2(v => (v <= 20 ? 100 : v - .2)), 1000);
     return () => { dead = true; offs.forEach(f => f()); clearInterval(o); roomRef.current?.leave(); game?.destroy(true); };
-  }, [token]);
+  }, [token, me]);
   const send = () => { if (text.trim()) roomRef.current?.send("chat", { text }); setText(""); };
   return <>
     <div ref={host} style={{ position: "fixed", inset: 0 }} />

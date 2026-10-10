@@ -1,5 +1,13 @@
 # Heku Droid — Colony (Phase 1)
 
+> **Current backend: Supabase** (project `heku-game`, ref `reddsewdebddtbbromvg`). Live at https://heku-game.vercel.app.
+> - `supabase/functions/auth`: edge function. Handles wallet nonce issue/verify (viem `verifyMessage`) and guest login, and returns an HMAC session token. Character load/save happen there too.
+> - `supabase/migrations`: the `characters` table (RLS: public read, writes only through the function using the service role), nonces, and the token secret.
+> - `client/src/net.ts`: Supabase Realtime channel `colony`. Presence tracks who's online (callsign, chassis, color, resting position). Broadcast carries `pos` (about 10 Hz while moving, 2 s heartbeat; clients smooth between updates) and `chat` (client-side limit of one message per 800 ms).
+> - Movement, pathfinding and collision now run **in the client** (`shared/sim.ts`). This is client-authoritative: a modified client could teleport or fake its position. Fine for a social hub, not for anything with stakes.
+> - Client env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (publishable key).
+> - `server/` (Colyseus) is **kept but unused**. It's the authoritative option once real-time rules matter (Railway, see below).
+
 2D isometric multiplayer Mars colony. Phaser 3 client + Colyseus authoritative server.
 
 ```
@@ -10,9 +18,9 @@ shared/   map.ts — the map grid, buildings, and droid options, used by both cl
 
 ## Run locally
 ```
-cd server && npm i && npm run dev        # :2567
-cd client && npm i && npm run dev        # :5173  (VITE_SERVER_URL defaults to http://localhost:2567)
+cd client && npm i && VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=... npm run dev
 ```
+The legacy Colyseus server (`cd server && npm run dev`) isn't used by the current client.
 To point the client at another server: build with `VITE_SERVER_URL=https://…`, or open `https://<client>/?server=https://…`. The `?server=` value is remembered in localStorage.
 
 ## Phase 1 features

@@ -1,4 +1,4 @@
-import Phaser from "phaser"; import type { Room } from "colyseus.js";
+import Phaser from "phaser"; import type { Net } from "./net";
 import { GRID, W, H, BUILDINGS, type Building } from "../../shared/map";
 export const TW = 65, TH = 32.5; const OY = 0.616;
 export const iso = (x: number, y: number) => ({ sx: (x - y) * TW / 2, sy: (x + y) * TH / 2 });
@@ -8,9 +8,9 @@ type P = { id: string; name: string; color: string; variant: string; x: number; 
 type V = { c: Phaser.GameObjects.Container; spr: Phaser.GameObjects.Image; tx: number; ty: number; rx: number; ry: number; p: P; bubble?: Phaser.GameObjects.Container; bt?: number; variant: string };
 const SPR_DIR: Record<string, string> = { N: "N", S: "S", E: "E", W: "W", NE: "NE", NW: "NW", SE: "SE", SW: "SW" };
 export class ColonyScene extends Phaser.Scene {
-  room!: Room; me = ""; views = new Map<string, V>(); keys!: Record<string, Phaser.Input.Keyboard.Key>; lastInput = "0,0"; near: Building | null = null; marker!: Phaser.GameObjects.Graphics;
+  room!: Net; me = ""; views = new Map<string, V>(); keys!: Record<string, Phaser.Input.Keyboard.Key>; lastInput = "0,0"; near: Building | null = null; marker!: Phaser.GameObjects.Graphics;
   constructor() { super("colony"); }
-  init(d: { room: Room }) { this.room = d.room; this.me = d.room.sessionId; }
+  init(d: { room: Net }) { this.room = d.room; this.me = d.room.sessionId; }
   preload() {
     const names = new Set<string>(["terrain_SE", "crater_SE", "craterLarge_SE", "rock_largeA_SE", "rock_largeB_SE", "rocks_smallA_SE", "rock_crystals_SE", "meteor_SE", "terrain_roadStraight_SE", "terrain_roadStraight_SW", "terrain_roadCross_SE", "machine_wireless_SE", "barrels_SE", "rover_SE", "machine_generatorLarge_SE"]);
     BUILDINGS.forEach(b => b.sprites.forEach(s => names.add(s)));
