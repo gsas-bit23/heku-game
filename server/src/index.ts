@@ -1,0 +1,10 @@
+import http from "node:http"; import express from "express"; import cors from "cors";
+import { Server } from "colyseus"; import { WebSocketTransport } from "@colyseus/ws-transport";
+import { authRoutes } from "./auth.js"; import { JsonStore } from "./store.js"; import { ColonyRoom } from "./ColonyRoom.js";
+const app = express(); app.use(cors()); app.use(express.json({ limit: "8kb" }));
+const store = new JsonStore(); ColonyRoom.store = store;
+app.get("/health", (_q, s) => s.json({ ok: true })); app.use(authRoutes(store));
+const server = http.createServer(app);
+const game = new Server({ transport: new WebSocketTransport({ server }) });
+game.define("colony", ColonyRoom);
+const PORT = Number(process.env.PORT || 2567); server.listen(PORT, () => console.log(`heku server :${PORT}`));
